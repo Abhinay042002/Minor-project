@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Standard Office & Essentials - College Mini Project</title>
+
+  <!-- =========================================================
+       PART 1: CSS STYLES (Can be moved to style.css if needed)
+       Simple, clean styling using basic CSS properties
+       ========================================================= -->
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f4f6f8;
+      color: #222222;
+      line-height: 1.5;
+    }
+
+    /* Container to keep content centered on big screens */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Top Notification Bar (replaces browser alert popup) */
+    #notification-bar {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 4px;
+      border-left: 4px solid #2563eb;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      z-index: 200;
+      font-size: 14px;
+    }
+
+    /* Header and Navigation Bar */
+    .header {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 16px 0;
+      border-bottom: 3px solid #2563eb;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: #e2e8f0;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .nav-links a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    .login-button {
+      background-color: #334155;
+      color: #ffffff;
+      border: 1px solid #64748b;
+      padding: 7px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .login-button:hover {
+      background-color: #475569;
+    }
+
+    .cart-button {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .cart-button:hover {
+      background-color: #1d4ed8;
+    }
+
+    /* Formal Welcome Banner */
+    .banner {
+      background-color: #ffffff;
+      border-bottom: 1px solid #d1d5db;
+      padding: 36px 0;
+      text-align: center;
+    }
+
+    .banner h1 {
+      font-size: 28px;
+      color: #1e293b;
+      margin-bottom: 10px;
+    }
+
+    .banner p {
+      font-size: 15px;
+      color: #4b5563;
+      max-width: 620px;
+      margin: 0 auto 20px auto;
+    }
+
+    .primary-btn {
+      background-color: #1e293b;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .primary-btn:hover {
+      background-color: #334155;
+    }
+
+    /* Filter and Search Bar */
+    .controls-section {
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 16px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .category-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      padding: 7px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .filter-btn:hover {
+      background-color: #e2e8f0;
+    }
+
+    .active-filter {
+      background-color: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .search-box input {
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 13px;
+      width: 190px;
+    }
+
+    /* Product Section & Grid */
+    .section-title {
+      font-size: 20px;
+      color: #1e293b;
+      margin: 28px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .product-card {
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product-preview {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      height: 105px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      color: #334155;
+    }
+
+    .product-code {
+      font-size: 11px;
+      color: #64748b;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .product-category {
+      display: inline-block;
+      font-size: 11px;
+      background-color: #e2e8f0;
+      color: #334155;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-bottom: 8px;
+      width: fit-content;
+    }
+
+    .product-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+
+    .product-desc {
+      font-size: 13px;
+      color: #4b5563;
+      margin-bottom: 14px;
+    }
+
+    .product-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .product-price {
+      font-size: 16px;
+      font-weight: bold;
+      color: #1e293b;
+    }
+
+    .add-btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .add-btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    /* Popup Modal Window (Used for Cart and Login) */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 150;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      padding: 20px;
+    }
+
+    .small-modal {
+      max-width: 400px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .close-btn {
+      background-color: #e2e8f0;
+      color: #1e293b;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .cart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .qty-btn {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 2px 8px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .remove-btn {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+      padding: 3px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .cart-summary {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Simple Forms (Checkout and Login) */
+    .checkout-form {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .checkout-form h4 {
+      margin-bottom: 10px;
+      color: #1e293b;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    #order-message,
+    #login-message {
+      display: none;
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      background-color: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    /* Info Sections & Footer */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .info-box {
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 20px;
+    }
+
+    .info-box h3 {
+      font-size: 17px;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .info-box p {
+      font-size: 14px;
+      color: #4b5563;
+      margin-bottom: 6px;
+    }
+
+    .footer {
+      background-color: #1e293b;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body id="top">
+
+  <!-- =========================================================
+       PART 2: HTML STRUCTURE
+       Simple layout: Header -> Banner -> Products -> Modals -> Footer
+       ========================================================= -->
+
+  <!-- Notification message bar -->
+  <div id="notification-bar">Item added to cart</div>
+
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="container header-content">
+      <div class="logo">STANDARD ESSENTIALS</div>
+      <nav class="nav-links">
+        <a href="#top">Home</a>
+        <a href="#products-section">Products</a>
+        <a href="#about-section">About</a>
+        <a href="#contact-section">Contact</a>
+        <button class="login-button" id="login-nav-btn" onclick="openLogin()">Login</button>
+        <button class="cart-button" onclick="openCart()">
+          Cart (<span id="cart-count">0</span>)
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Banner -->
+  <section class="banner">
+    <div class="container">
+      <h1>Professional Office &amp; Student Essentials</h1>
+      <p>A formal online store built with HTML, CSS, and JavaScript for browsing stationery, electronics, and study accessories.</p>
+      <button class="primary-btn" onclick="scrollToProducts()">View Catalog</button>
+    </div>
+  </section>
+
+  <!-- Main Content Area -->
+  <main class="container" id="products-section">
+
+    <!-- Category Filters & Search Box -->
+    <div class="controls-section">
+      <div class="category-buttons">
+        <button id="btn-all" class="filter-btn active-filter" onclick="filterByCategory('All')">All Items</button>
+        <button id="btn-office" class="filter-btn" onclick="filterByCategory('Office')">Office</button>
+        <button id="btn-electronics" class="filter-btn" onclick="filterByCategory('Electronics')">Electronics</button>
+        <button id="btn-accessories" class="filter-btn" onclick="filterByCategory('Accessories')">Accessories</button>
+      </div>
+
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search product name..." onkeyup="searchProducts()">
+        <button class="filter-btn" onclick="searchProducts()">Search</button>
+        <button class="filter-btn" onclick="resetFilters()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Products List -->
+    <h2 class="section-title">Available Products</h2>
+    <div id="product-list" class="product-grid">
+      <!-- Products are loaded here by JavaScript -->
+    </div>
+
+    <!-- About & Contact Sections -->
+    <div class="info-grid">
+      <div class="info-box" id="about-section">
+        <h3>About This Project</h3>
+        <p>Standard Essentials is a frontend e-commerce web application designed using standard HTML5, CSS3, and plain JavaScript.</p>
+        <p>It demonstrates core web concepts including DOM manipulation, array filtering, dynamic cart calculation, and basic form validation.</p>
+      </div>
+
+      <div class="info-box" id="contact-section">
+        <h3>Contact &amp; Support</h3>
+        <p><strong>Email:</strong> support@standardessentials.in</p>
+        <p><strong>Phone:</strong> +91 98765 43210</p>
+        <p><strong>Hours:</strong> Monday to Saturday, 9:00 AM - 6:00 PM</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Student / Customer Login Modal -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="modal-box small-modal">
+      <div class="modal-header">
+        <h3>User Login</h3>
+        <button class="close-btn" onclick="closeLogin()">Close</button>
+      </div>
+      <div class="form-group">
+        <label for="login-username">Your Name</label>
+        <input type="text" id="login-username" placeholder="Enter your name">
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="Enter password">
+      </div>
+      <button class="primary-btn" style="width: 100%;" onclick="loginUser()">Submit Login</button>
+      <div id="login-message"></div>
+    </div>
+  </div>
+
+  <!-- Shopping Cart Modal Window -->
+  <div id="cart-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Your Shopping Cart</h3>
+        <button class="close-btn" onclick="closeCart()">Close</button>
+      </div>
+
+      <!-- Cart Items Container -->
+      <div id="cart-items">
+        <p>Your cart is empty.</p>
+      </div>
+
+      <!-- Total Price -->
+      <div class="cart-summary">
+        <span>Total Amount:</span>
+        <span>Rs. <span id="cart-total">0</span></span>
+      </div>
+
+      <!-- Simple Checkout Form -->
+      <div class="checkout-form">
+        <h4>Customer Details</h4>
+        <div class="form-group">
+          <label for="customer-name">Full Name</label>
+          <input type="text" id="customer-name" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label for="customer-email">Email Address</label>
+          <input type="email" id="customer-email" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+          <label for="customer-address">Delivery Address</label>
+          <input type="text" id="customer-address" placeholder="Enter house no, street, city, and pin code">
+        </div>
+        <div class="form-group">
+          <label for="payment-method">Payment Method</label>
+          <select id="payment-method">
+            <option value="Cash on Delivery">Cash on Delivery (COD)</option>
+            <option value="UPI Payment">UPI (Google Pay / PhonePe)</option>
+            <option value="Card Payment">Credit / Debit Card</option>
+          </select>
+        </div>
+        <button class="primary-btn" style="width: 100%;" onclick="placeOrder()">Place Order</button>
+        <div id="order-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 Standard Essentials Online Store | Frontend Web Development Mini Project</p>
+    </div>
+  </footer>
+
+  <!-- =========================================================
+       PART 3: JAVASCRIPT LOGIC (Can be moved to script.js)
+       Written with simple variables, for-loops, and functions
+       ========================================================= -->
+  <script>
+    // STEP 1: Product Data List
+    // To add more products in the future, copy one block and change the details.
+    var products = [
+      {
+        id: 1,
+        code: "ITEM-101",
+        name: "Executive Hardcover Notebook",
+        category: "Office",
+        price: 250,
+        description: "Ruled 200-page A5 notebook with a formal navy cover."
+      },
+      {
+        id: 2,
+        code: "ITEM-102",
+        name: "Classic Metal Rollerball Pen",
+        category: "Office",
+        price: 180,
+        description: "Smooth black ink pen with a balanced stainless steel body."
+      },
+      {
+        id: 3,
+        code: "ITEM-103",
+        name: "Compact Wireless Keyboard",
+        category: "Electronics",
+        price: 850,
+        description: "Quiet low-profile keys suitable for college and office work."
+      },
+      {
+        id: 4,
+        code: "ITEM-104",
+        name: "Adjustable LED Desk Lamp",
+        category: "Electronics",
+        price: 650,
+        description: "Rechargeable study lamp with three brightness settings."
+      },
+      {
+        id: 5,
+        code: "ITEM-105",
+        name: "Structured Laptop Briefcase",
+        category: "Accessories",
+        price: 1200,
+        description: "Water-resistant 15.6-inch laptop bag with file compartments."
+      },
+      {
+        id: 6,
+        code: "ITEM-106",
+        name: "Wooden Desk Organizer Tray",
+        category: "Accessories",
+        price: 450,
+        description: "Keeps pens, ID cards, and sticky notes neatly arranged."
+      }
+    ];
+
+    // Variables to store cart items and current category filter
+    var cart = [];
+    var currentCategory = "All";
+    var messageTimer = null;
+
+    // STEP 2: Function to display products on the screen
+    function displayProducts(listToDisplay) {
+      var container = document.getElementById("product-list");
+      var html = "";
+
+      if (listToDisplay.length === 0) {
+        container.innerHTML = "<p>No matching products found.</p>";
+        return;
+      }
+
+      for (var i = 0; i < listToDisplay.length; i++) {
+        var item = listToDisplay[i];
+
+        html = html + '<div class="product-card">';
+        html = html + '  <div>';
+        html = html + '    <div class="product-preview">';
+        html = html + '      <strong>' + item.category.toUpperCase() + '</strong>';
+        html = html + '      <span class="product-code">' + item.code + '</span>';
+        html = html + '    </div>';
+        html = html + '    <span class="product-category">' + item.category + '</span>';
+        html = html + '    <div class="product-title">' + item.name + '</div>';
+        html = html + '    <div class="product-desc">' + item.description + '</div>';
+        html = html + '  </div>';
+        html = html + '  <div class="product-bottom">';
+        html = html + '    <span class="product-price">Rs. ' + item.price + '</span>';
+        html = html + '    <button class="add-btn" onclick="addToCart(' + item.id + ')">Add to Cart</button>';
+        html = html + '  </div>';
+        html = html + '</div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    // STEP 3: Filter products by category
+    function filterByCategory(categoryName) {
+      currentCategory = categoryName;
+
+      // Reset all filter button styles first
+      document.getElementById("btn-all").className = "filter-btn";
+      document.getElementById("btn-office").className = "filter-btn";
+      document.getElementById("btn-electronics").className = "filter-btn";
+      document.getElementById("btn-accessories").className = "filter-btn";
+
+      // Highlight the selected button
+      if (categoryName === "All") {
+        document.getElementById("btn-all").className = "filter-btn active-filter";
+      } else if (categoryName === "Office") {
+        document.getElementById("btn-office").className = "filter-btn active-filter";
+      } else if (categoryName === "Electronics") {
+        document.getElementById("btn-electronics").className = "filter-btn active-filter";
+      } else if (categoryName === "Accessories") {
+        document.getElementById("btn-accessories").className = "filter-btn active-filter";
+      }
+
+      searchProducts();
+    }
+
+    // STEP 4: Search products by text and selected category
+    function searchProducts() {
+      var searchText = document.getElementById("search-input").value.toLowerCase();
+      var filteredList = [];
+
+      for (var i = 0; i < products.length; i++) {
+        var item = products[i];
+        var matchesCategory = (currentCategory === "All" || item.category === currentCategory);
+        var matchesSearch = (item.name.toLowerCase().indexOf(searchText) !== -1 ||
+                             item.description.toLowerCase().indexOf(searchText) !== -1);
+
+        if (matchesCategory && matchesSearch) {
+          filteredList.push(item);
+        }
+      }
+
+      displayProducts(filteredList);
+    }
+
+    // Reset search box and category filter
+    function resetFilters() {
+      document.getElementById("search-input").value = "";
+      filterByCategory("All");
+    }
+
+    // STEP 5: Add a product to the shopping cart
+    function addToCart(productId) {
+      var selectedProduct = null;
+
+      for (var i = 0; i < products.length; i++) {
+        if (products[i].id === productId) {
+          selectedProduct = products[i];
+          break;
+        }
+      }
+
+      if (selectedProduct === null) {
+        return;
+      }
+
+      // Check if product is already in the cart
+      var foundInCart = false;
+      for (var j = 0; j < cart.length; j++) {
+        if (cart[j].id === productId) {
+          cart[j].quantity = cart[j].quantity + 1;
+          foundInCart = true;
+          break;
+        }
+      }
+
+      // If not in cart, add it as a new item
+      if (foundInCart === false) {
+        cart.push({
+          id: selectedProduct.id,
+          name: selectedProduct.name,
+          price: selectedProduct.price,
+          quantity: 1
+        });
+      }
+
+      updateCartDisplay();
+      showNotification(selectedProduct.name + " added to cart.");
+    }
+
+    // Increase or decrease item quantity in the cart
+    function changeQuantity(index, change) {
+      cart[index].quantity = cart[index].quantity + change;
+
+      if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+      }
+
+      updateCartDisplay();
+    }
+
+    // Remove an item from the cart completely
+    function removeItem(index) {
+      cart.splice(index, 1);
+      updateCartDisplay();
+    }
+
+    // Update cart counter, items list, and total amount
+    function updateCartDisplay() {
+      var cartItemsDiv = document.getElementById("cart-items");
+      var cartCountSpan = document.getElementById("cart-count");
+      var cartTotalSpan = document.getElementById("cart-total");
+
+      var totalItems = 0;
+      var totalPrice = 0;
+      var html = "";
+
+      if (cart.length === 0) {
+        cartItemsDiv.innerHTML = "<p>Your cart is empty.</p>";
+        cartCountSpan.innerHTML = "0";
+        cartTotalSpan.innerHTML = "0";
+        return;
+      }
+
+      for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        var itemTotal = item.price * item.quantity;
+        totalItems = totalItems + item.quantity;
+        totalPrice = totalPrice + itemTotal;
+
+        html = html + '<div class="cart-row">';
+        html = html + '  <div><strong>' + item.name + '</strong> (Rs. ' + item.price + ')</div>';
+        html = html + '  <div>';
+        html = html + '    <button class="qty-btn" onclick="changeQuantity(' + i + ', -1)">-</button>';
+        html = html + '    <span style="margin: 0 8px;">' + item.quantity + '</span>';
+        html = html + '    <button class="qty-btn" onclick="changeQuantity(' + i + ', 1)">+</button>';
+        html = html + '    <strong style="margin-left: 10px;">Rs. ' + itemTotal + '</strong>';
+        html = html + '    <button class="remove-btn" onclick="removeItem(' + i + ')">Remove</button>';
+        html = html + '  </div>';
+        html = html + '</div>';
+      }
+
+      cartItemsDiv.innerHTML = html;
+      cartCountSpan.innerHTML = totalItems;
+      cartTotalSpan.innerHTML = totalPrice;
+    }
+
+    // Open and close the Cart Modal
+    function openCart() {
+      document.getElementById("order-message").style.display = "none";
+      document.getElementById("cart-modal").style.display = "flex";
+    }
+
+    function closeCart() {
+      document.getElementById("cart-modal").style.display = "none";
+    }
+
+    // STEP 6: Simple User Login Functions
+    function openLogin() {
+      document.getElementById("login-message").style.display = "none";
+      document.getElementById("login-modal").style.display = "flex";
+    }
+
+    function closeLogin() {
+      document.getElementById("login-modal").style.display = "none";
+    }
+
+    function loginUser() {
+      var username = document.getElementById("login-username").value.trim();
+      var password = document.getElementById("login-password").value.trim();
+      var loginMsg = document.getElementById("login-message");
+
+      if (username === "" || password === "") {
+        loginMsg.style.display = "block";
+        loginMsg.style.backgroundColor = "#fee2e2";
+        loginMsg.style.color = "#991b1b";
+        loginMsg.style.borderColor = "#fca5a5";
+        loginMsg.innerHTML = "Please enter both your name and password.";
+        return;
+      }
+
+      // Update header button and pre-fill checkout name
+      document.getElementById("login-nav-btn").innerHTML = "Hi, " + username;
+      document.getElementById("customer-name").value = username;
+      document.getElementById("login-password").value = "";
+
+      closeLogin();
+      showNotification("Logged in as " + username);
+    }
+
+    // STEP 7: Simple Checkout and Bill Summary Function
+    function placeOrder() {
+      var name = document.getElementById("customer-name").value.trim();
+      var email = document.getElementById("customer-email").value.trim();
+      var address = document.getElementById("customer-address").value.trim();
+      var payment = document.getElementById("payment-method").value;
+      var messageBox = document.getElementById("order-message");
+
+      if (cart.length === 0) {
+        messageBox.style.display = "block";
+        messageBox.style.backgroundColor = "#fee2e2";
+        messageBox.style.color = "#991b1b";
+        messageBox.style.borderColor = "#fca5a5";
+        messageBox.innerHTML = "Please add at least one product to your cart before placing an order.";
+        return;
+      }
+
+      if (name === "" || email === "" || address === "") {
+        messageBox.style.display = "block";
+        messageBox.style.backgroundColor = "#fee2e2";
+        messageBox.style.color = "#991b1b";
+        messageBox.style.borderColor = "#fca5a5";
+        messageBox.innerHTML = "Please fill in your name, email, and delivery address.";
+        return;
+      }
+
+      // Calculate order summary and clear the cart
+      var finalTotal = document.getElementById("cart-total").innerHTML;
+      var orderNumber = Math.floor(1000 + Math.random() * 9000);
+
+      cart = [];
+      updateCartDisplay();
+
+      document.getElementById("customer-email").value = "";
+      document.getElementById("customer-address").value = "";
+
+      messageBox.style.display = "block";
+      messageBox.style.backgroundColor = "#dcfce7";
+      messageBox.style.color = "#166534";
+      messageBox.style.borderColor = "#86efac";
+      messageBox.innerHTML = "<strong>Order Placed Successfully!</strong><br>" +
+                             "Order ID: #ORD-" + orderNumber + "<br>" +
+                             "Customer: " + name + "<br>" +
+                             "Payment Mode: " + payment + "<br>" +
+                             "Total Paid: Rs. " + finalTotal;
+    }
+
+    // Smooth scroll to products section
+    function scrollToProducts() {
+      var section = document.getElementById("products-section");
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Show a small notification bar at the bottom right
+    function showNotification(text) {
+      var bar = document.getElementById("notification-bar");
+      bar.innerHTML = text;
+      bar.style.display = "block";
+
+      if (messageTimer !== null) {
+        clearTimeout(messageTimer);
+      }
+
+      messageTimer = setTimeout(function() {
+        bar.style.display = "none";
+      }, 2500);
+    }
+
+    // Load all products when the page opens
+    displayProducts(products);
+  </script>
+</body>
+</html>
