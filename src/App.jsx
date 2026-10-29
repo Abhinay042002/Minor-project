@@ -782,16 +782,16 @@ export default function App() {
       {activeTab === "shop" && (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
           {/* Customer Welcome Banner */}
-          <section className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 mb-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <section className="store-hero bg-white border border-slate-200 rounded-xl p-6 sm:p-8 mb-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-800 border border-blue-200 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+              <div className="hero-eyebrow inline-flex items-center gap-2 bg-blue-50 text-blue-800 border border-blue-200 px-3 py-1 rounded-full text-xs font-semibold mb-3">
                 <span>New Season Collection</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+              <h1 className="store-hero__title text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
                 Everyday Office, Study &amp; Desk Essentials
               </h1>
-              <p className="text-slate-600 text-sm sm:text-base mb-4">
-                Thoughtfully designed stationery, workspace electronics, and formal carry accessories built for daily productivity.
+              <p className="hero-description text-slate-600 text-sm sm:text-base mb-4">
+                Thoughtfully selected essentials for a calmer desk, sharper focus, and a more considered everyday.
               </p>
               <div className="flex flex-wrap gap-3 text-xs text-slate-700">
                 <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-md">
@@ -930,7 +930,7 @@ export default function App() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition"
+                    className="product-card bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition"
                   >
                     <div>
                       <div className="bg-slate-100 border border-slate-200/80 rounded-lg h-44 overflow-hidden relative mb-3 group">
