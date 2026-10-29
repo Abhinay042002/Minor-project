@@ -1,0 +1,9 @@
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+# React/Vite single-page app: route requests back through the app entry point.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
