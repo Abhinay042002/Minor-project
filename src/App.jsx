@@ -264,6 +264,7 @@ export default function App() {
   // User / Admin Authentication State
   const [currentUser, setCurrentUser] = useState(null); // { name, email, isAdmin }
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loginMode, setLoginMode] = useState("customer"); // 'customer' | 'admin'
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -518,6 +519,32 @@ export default function App() {
     }
   }
 
+  async function handleSignUpSubmit(e) {
+    e.preventDefault();
+    setLoginError("");
+    const fullName = loginName.trim();
+    const email = loginEmail.trim();
+    if (!fullName || !email || !loginPassword) { setLoginError("Please complete your name, email, and password."); return; }
+    if (loginPassword.length < 8) { setLoginError("Your password must be at least 8 characters long."); return; }
+    if (!backendEnabled) { setLoginError("Account creation requires Supabase. Configure the backend environment variables first."); return; }
+    try {
+      const user = await backend.signUp(email, loginPassword, fullName);
+      setLoginPassword("");
+      if (user.needsEmailConfirmation) {
+        setIsSignUp(false);
+        setLoginError("Your account has been created. Check your inbox to confirm your email, then sign in.");
+        return;
+      }
+      setCurrentUser(user);
+      setCustomerName(user.name || fullName);
+      setCustomerEmail(user.email || email);
+      setIsLoginOpen(false);
+      setIsSignUp(false);
+      setActiveTab("shop");
+      showToast("Welcome to Standard Essentials, " + (user.name || fullName) + "!");
+    } catch (error) { setLoginError(error.message || "Unable to create your account. Please try again."); }
+  }
+
   async function handleLogout() {
     try { if (backendEnabled) await backend.signOut(); } catch (error) { showToast(error.message); }
     setCurrentUser(null);
@@ -683,22 +710,14 @@ export default function App() {
       <header className="bg-slate-900 text-white sticky top-0 z-40 border-b border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
           {/* Store Brand */}
-          <div
+          <button
+            type="button"
             onClick={() => setActiveTab("shop")}
-            className="flex items-center gap-2.5 cursor-pointer"
+            className="store-brand flex items-center cursor-pointer"
+            aria-label="Standard Essentials home"
           >
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <ShoppingBag className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-lg tracking-wide block leading-none">
-                STANDARD ESSENTIALS
-              </span>
-              <span className="text-[11px] text-slate-400 tracking-wider uppercase">
-                Office &amp; Lifestyle Store
-              </span>
-            </div>
-          </div>
+            <img src="/standard-essentials-logo.svg" alt="Standard Essentials — Shop smart. Live better." className="store-brand__logo" />
+          </button>
 
           {/* Navigation Links */}
           <nav className="flex items-center gap-1 sm:gap-2 flex-wrap">
@@ -773,6 +792,7 @@ export default function App() {
               <button
                 onClick={() => {
                   setLoginMode("customer");
+                  setIsSignUp(false);
                   setLoginError("");
                   setIsLoginOpen(true);
                 }}
@@ -1690,9 +1710,15 @@ export default function App() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="login-page-card bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-              <h3 className="font-bold text-base text-slate-900">
-                {loginMode === "admin" ? "Store Admin Sign In" : "Customer Sign In"}
-              </h3>
+              <div className="flex items-center gap-3 min-w-0">
+                <img src="/favicon.svg" alt="" className="w-10 h-10 rounded-lg" />
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">
+                    {loginMode === "admin" ? "Store Admin Sign In" : isSignUp ? "Create your account" : "Customer Sign In"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Shop smart. Live better.</p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsLoginOpen(false)}
                 className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600"
@@ -1733,32 +1759,18 @@ export default function App() {
               </button>
             </div>
 
-            <form onSubmit={handleLoginSubmit} className="space-y-3 text-xs">
+            <form onSubmit={isSignUp ? handleSignUpSubmit : handleLoginSubmit} className="space-y-3 text-xs">
               {loginMode === "customer" ? (
                 <>
+                  {isSignUp && (
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                      <input type="text" autoComplete="name" required value={loginName} onChange={(e) => setLoginName(e.target.value)} placeholder="Enter your full name" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                    </div>
+                  )}
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={loginName}
-                      onChange={(e) => setLoginName(e.target.value)}
-                      placeholder="Enter your full name"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                    />
+                    <label className="block font-semibold text-slate-700 mb-1">Email Address *</label>
+                    <input type="email" autoComplete="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
                   </div>
                 </>
               ) : (
@@ -1782,9 +1794,12 @@ export default function App() {
                 </label>
                 <input
                   type="password"
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
+                  minLength={isSignUp ? 8 : undefined}
+                  required
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Enter password"
+                  placeholder={isSignUp ? "Create a password (8+ characters)" : "Enter password"}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                 />
               </div>
@@ -1803,9 +1818,17 @@ export default function App() {
                     : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
-                {loginMode === "admin" ? "Access Admin Dashboard" : "Sign In"}
+                {loginMode === "admin" ? "Access Admin Dashboard" : isSignUp ? "Create Account" : "Sign In"}
               </button>
             </form>
+            {loginMode === "customer" && (
+              <div className="mt-5 pt-4 border-t border-slate-200 text-center text-xs text-slate-600">
+                {isSignUp ? "Already have an account?" : "New to Standard Essentials?"}{" "}
+                <button type="button" onClick={() => { setIsSignUp((value) => !value); setLoginError(""); setLoginPassword(""); }} className="font-bold text-rose-900 hover:underline">
+                  {isSignUp ? "Sign in" : "Create an account"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -2102,6 +2125,7 @@ export default function App() {
               <button
                 onClick={() => {
                   setLoginMode("admin");
+                  setIsSignUp(false);
                   setLoginError("");
                   setIsLoginOpen(true);
                 }}
