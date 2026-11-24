@@ -1689,7 +1689,7 @@ export default function App() {
           ==================================================================== */}
       {isLoginOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
+          <div className="login-page-card bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
               <h3 className="font-bold text-base text-slate-900">
                 {loginMode === "admin" ? "Store Admin Sign In" : "Customer Sign In"}
@@ -1815,7 +1815,7 @@ export default function App() {
           MODAL 3: SHOPPING CART & CHECKOUT
           ==================================================================== */}
       {isCartOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div className="login-page-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
               <div className="flex items-center gap-2">
