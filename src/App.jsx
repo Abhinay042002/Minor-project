@@ -433,50 +433,45 @@ export default function App() {
   // --------------------------------------------------------------------------
   // 4. WISHLIST & CUSTOMER REVIEWS
   // --------------------------------------------------------------------------
-  function toggleWishlist(productId) {
-    if (wishlist.includes(productId)) {
-      setWishlist(wishlist.filter((id) => id !== productId));
-      showToast("Removed from Wishlist");
-    } else {
-      setWishlist([...wishlist, productId]);
-      showToast("Saved to Wishlist");
-    }
+  async function toggleWishlist(productId) {
+    if (backendEnabled && !currentUser) { showToast("Sign in to sync your wishlist across devices."); setIsLoginOpen(true); return; }
+    try {
+      if (wishlist.includes(productId)) {
+        setWishlist(prev => prev.filter(id => id !== productId));
+        if (backendEnabled) await backend.removeWishlist(productId);
+        showToast("Removed from Wishlist");
+      } else {
+        setWishlist(prev => [...prev, productId]);
+        if (backendEnabled) await backend.saveWishlist([productId]);
+        showToast("Saved to Wishlist");
+      }
+    } catch (error) { showToast(error.message); }
   }
 
-  function handleAddReview(e) {
+  async function handleAddReview(e) {
     e.preventDefault();
     if (!quickViewProduct) return;
-    if (!reviewAuthor.trim() || !reviewComment.trim()) {
-      showToast("Please enter your name and review comment");
-      return;
-    }
-
+    if (backendEnabled && !currentUser) { showToast("Sign in to leave a review."); setIsLoginOpen(true); return; }
+    if (!reviewAuthor.trim() || !reviewComment.trim()) { showToast("Please enter your name and review comment"); return; }
     const numericRating = Number(reviewRating) || 5;
-    const newReview = {
-      id: Date.now(),
-      user: reviewAuthor.trim(),
-      rating: numericRating,
-      comment: reviewComment.trim()
-    };
-
-    const updatedProducts = products.map((p) => {
+    const newReview = { id: Date.now(), user: reviewAuthor.trim(), rating: numericRating, comment: reviewComment.trim() };
+    if (backendEnabled) {
+      try {
+        await backend.createReview({ productId: quickViewProduct.id, rating: numericRating, comment: reviewComment.trim() });
+        const remoteProducts = await backend.fetchProducts();
+        setProducts(remoteProducts.map(product => ({ ...product, price: Number(product.price), rating: Number(product.rating), reviews: [], specs: product.specs || [] })));
+      } catch (error) { showToast(error.message); return; }
+    }
+    const updatedProducts = products.map(p => {
       if (p.id !== quickViewProduct.id) return p;
-      const updatedReviews = [newReview, ...p.reviews];
-      const avg =
-        updatedReviews.reduce((acc, r) => acc + r.rating, 0) /
-        updatedReviews.length;
-      const updatedProd = {
-        ...p,
-        reviews: updatedReviews,
-        rating: Number(avg.toFixed(1))
-      };
+      const updatedReviews = [newReview, ...(p.reviews || [])];
+      const avg = updatedReviews.reduce((acc, review) => acc + review.rating, 0) / updatedReviews.length;
+      const updatedProd = { ...p, reviews: updatedReviews, rating: Number(avg.toFixed(1)) };
       setQuickViewProduct(updatedProd);
       return updatedProd;
     });
-
     setProducts(updatedProducts);
-    setReviewAuthor("");
-    setReviewComment("");
+    setReviewAuthor(""); setReviewComment("");
     showToast("Thank you! Your review has been posted.");
   }
 
