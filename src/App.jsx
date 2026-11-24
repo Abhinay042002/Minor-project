@@ -1067,10 +1067,9 @@ export default function App() {
               })}
             </div>
           )}
+          </div>
         </main>
       )}
-
-          </div>
 
       {/* ====================================================================
           CUSTOMER VIEW 2: WISHLIST
