@@ -846,6 +846,35 @@ export default function App() {
             </div>
           </section>
 
+          {/* Marketplace-style rotating offer carousel */}
+          <section className="marketplace-promo mb-6" aria-label="Featured offers">
+            <div className="promo-track">
+              <article className="promo-slide promo-slide--one">
+                <div><span className="promo-kicker">MEMBER EXCLUSIVE · LIMITED TIME</span><h2>Make room for better ideas.</h2><p>Refresh your desk with thoughtful essentials. Save 10% on your first order with WELCOME10.</p><button onClick={() => { setSearchQuery(""); setSelectedCategory("All"); setAppliedCoupon("WELCOME10"); }}>Shop the offer <span>→</span></button></div>
+                <div className="promo-art" aria-hidden="true"><span>10<small>% OFF</small></span></div>
+              </article>
+              <article className="promo-slide promo-slide--two">
+                <div><span className="promo-kicker">THE EVERYDAY UPGRADE</span><h2>Small upgrades. Big difference.</h2><p>Discover useful accessories and everyday tech for a more considered workspace.</p><button onClick={() => { setSelectedCategory("Accessories"); setSearchQuery(""); }}>Explore accessories <span>→</span></button></div>
+                <div className="promo-art promo-art--second" aria-hidden="true"><span>CURATED<br/>FOR YOU</span></div>
+              </article>
+              <article className="promo-slide promo-slide--three">
+                <div><span className="promo-kicker">THE DESK EDIT</span><h2>Your next great workday starts here.</h2><p>Shop notebooks, desk essentials and practical finds selected for your daily routine.</p><button onClick={() => { setSelectedCategory("Office"); setSearchQuery(""); }}>Shop office essentials <span>→</span></button></div>
+                <div className="promo-art promo-art--third" aria-hidden="true"><span>WORK<br/>BETTER</span></div>
+              </article>
+            </div>
+            <div className="promo-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          </section>
+
+          <section className="home-category-strip mb-6" aria-label="Shop by category">
+            <div className="home-category-heading"><span>DISCOVER YOUR NEXT ESSENTIAL</span><h2>Shop by category</h2></div>
+            <div className="home-category-grid">
+              {categories.filter((cat) => cat !== "All").map((cat, index) => (
+                <button key={cat} className={"home-category-card home-category-card--" + index} onClick={() => { setSelectedCategory(cat); setSearchQuery(""); document.getElementById("product-results")?.scrollIntoView({ behavior: "smooth" }); }}>
+                  <span className="home-category-number">0{index + 1}</span><strong>{cat}</strong><span className="home-category-link">Explore collection →</span>
+                </button>
+              ))}
+            </div>
+          </section>
           {/* Category Filter, Search & Sort Controls */}
           <section className="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -869,14 +898,16 @@ export default function App() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative flex-1 sm:flex-initial">
+                <div className="market-search relative flex-1 sm:flex-initial">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="text"
+                    type="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 w-full sm:w-52"
+                    onKeyDown={(e) => { if (e.key === "Enter") document.getElementById("product-results")?.scrollIntoView({ behavior: "smooth" }); }}
+                    placeholder="Search products, categories and essentials..."
+                    aria-label="Search products and categories"
+                    className="pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-full focus:outline-none focus:border-blue-600 w-full sm:w-80"
                   />
                 </div>
 
@@ -928,6 +959,7 @@ export default function App() {
           </section>
 
           {/* Product Grid */}
+          <div id="product-results" className="scroll-mt-28">
           {filteredProducts.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
               <p className="text-slate-600 font-medium mb-2">
@@ -1037,6 +1069,8 @@ export default function App() {
           )}
         </main>
       )}
+
+          </div>
 
       {/* ====================================================================
           CUSTOMER VIEW 2: WISHLIST
