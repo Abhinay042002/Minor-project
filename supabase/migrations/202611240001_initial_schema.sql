@@ -174,6 +174,8 @@ begin
 end;
 $$;
 
+create or replace function public.is_store_admin() returns boolean language sql stable security definer set search_path = public as $ select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin'); $;
+
 alter table public.profiles enable row level security;
 alter table public.products enable row level security;
 alter table public.wishlists enable row level security;
@@ -181,13 +183,13 @@ alter table public.reviews enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 
-create policy "profiles read own or admin" on public.profiles for select using (id = auth.uid() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
+create policy "profiles read own or admin" on public.profiles for select using (id = auth.uid() or public.is_store_admin());
 create policy "profiles update own name" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid() and role = 'customer');
 
-create policy "products public read active" on public.products for select using (active = true or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
-create policy "products admin insert" on public.products for insert with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
-create policy "products admin update" on public.products for update using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin')) with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
-create policy "products admin delete" on public.products for delete using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
+create policy "products public read active" on public.products for select using (active = true or public.is_store_admin());
+create policy "products admin insert" on public.products for insert with check (public.is_store_admin());
+create policy "products admin update" on public.products for update using (public.is_store_admin()) with check (public.is_store_admin());
+create policy "products admin delete" on public.products for delete using (public.is_store_admin());
 
 create policy "wishlist own rows" on public.wishlists for select using (user_id=auth.uid());
 create policy "wishlist own insert" on public.wishlists for insert with check (user_id=auth.uid());
@@ -197,11 +199,11 @@ create policy "reviews public read" on public.reviews for select using (true);
 create policy "reviews authenticated insert own" on public.reviews for insert with check (user_id=auth.uid());
 create policy "reviews owner delete" on public.reviews for delete using (user_id=auth.uid());
 
-create policy "orders customer or admin read" on public.orders for select using (user_id=auth.uid() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
-create policy "orders admin update" on public.orders for update using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin')) with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin'));
+create policy "orders customer or admin read" on public.orders for select using (user_id=auth.uid() or public.is_store_admin());
+create policy "orders admin update" on public.orders for update using (public.is_store_admin()) with check (public.is_store_admin());
 
 create policy "order items owner or admin read" on public.order_items for select using (
-  exists(select 1 from public.orders o where o.id=order_id and (o.user_id=auth.uid() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin')))
+  exists(select 1 from public.orders o where o.id=order_id and (o.user_id=auth.uid() or public.is_store_admin()))
 );
 
 grant usage on schema public to anon, authenticated;
