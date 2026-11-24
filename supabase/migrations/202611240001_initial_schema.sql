@@ -115,7 +115,7 @@ create or replace function public.place_order(
   p_coupon_code text,
   p_items jsonb
 ) returns jsonb
-language plpgsql security invoker set search_path = public
+language plpgsql security definer set search_path = public
 as $$
 declare
   v_order public.orders%rowtype;
