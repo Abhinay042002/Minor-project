@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { backend, backendEnabled } from './lib/backend.js';
 import {
   ShoppingBag,
   ShoppingCart,
@@ -207,20 +208,52 @@ export default function App() {
   );
 
   useEffect(() => {
-    saveToStorage("se_frontend_products_v1", products);
+    if (!backendEnabled) saveToStorage("se_frontend_products_v1", products);
   }, [products]);
 
+  useEffect(() => { saveToStorage("se_frontend_cart_v1", cart); }, [cart]);
   useEffect(() => {
-    saveToStorage("se_frontend_cart_v1", cart);
-  }, [cart]);
-
-  useEffect(() => {
-    saveToStorage("se_frontend_wishlist_v1", wishlist);
+    if (!backendEnabled) saveToStorage("se_frontend_wishlist_v1", wishlist);
   }, [wishlist]);
+  useEffect(() => {
+    if (!backendEnabled) saveToStorage("se_frontend_orders_v1", orders);
+  }, [orders]);
 
   useEffect(() => {
-    saveToStorage("se_frontend_orders_v1", orders);
-  }, [orders]);
+    if (!backendEnabled) return;
+    let active = true;
+    (async () => {
+      try {
+        const profile = await backend.getCurrentProfile();
+        if (!active) return;
+        if (profile) {
+          setCurrentUser(profile);
+          setCustomerName(profile.name);
+          setCustomerEmail(profile.email);
+          const [remoteOrders, remoteWishlist] = await Promise.all([backend.fetchOrders(), backend.fetchWishlist()]);
+          if (!active) return;
+          setOrders(remoteOrders.map(order => ({
+            id: order.order_number, date: new Date(order.created_at).toLocaleString("en-IN"),
+            customerName: order.customer_name, email: order.customer_email, address: order.shipping_address,
+            paymentMethod: order.payment_method,
+            items: (order.order_items || []).map(item => ({ id: item.product_id, name: item.product_name, image: item.product_image, price: Number(item.unit_price), quantity: item.quantity })),
+            subtotal: Number(order.subtotal), discount: Number(order.discount), gst: Number(order.tax),
+            total: Number(order.total), couponUsed: order.coupon_code || "None", status: order.status
+          })));
+          setWishlist(remoteWishlist.map(item => item.product_id));
+        }
+        const remoteProducts = await backend.fetchProducts();
+        if (!active) return;
+        if (remoteProducts.length) setProducts(remoteProducts.map(product => ({
+          ...product, price: Number(product.price), rating: Number(product.rating),
+          reviews: [], specs: Array.isArray(product.specs) ? product.specs : []
+        })));
+      } catch (error) {
+        if (active) showToast("Backend connection: " + error.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Filter & Sort State
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -450,112 +483,105 @@ export default function App() {
   // --------------------------------------------------------------------------
   // 5. SEPARATED CUSTOMER & ADMIN AUTHENTICATION
   // --------------------------------------------------------------------------
-  function handleLoginSubmit(e) {
+  async function handleLoginSubmit(e) {
     e.preventDefault();
     setLoginError("");
-
-    if (loginMode === "admin") {
-      if (!loginEmail.trim() || !loginPassword.trim()) {
-        setLoginError("Please enter the Admin Email and Password.");
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      setLoginError("Please enter your email and password.");
+      return;
+    }
+    if (!backendEnabled) {
+      setLoginError("Account sign-in requires the Supabase backend. Configure the environment variables first.");
+      return;
+    }
+    try {
+      const user = await backend.signIn(loginEmail.trim(), loginPassword);
+      if (loginMode === "admin" && !user.isAdmin) {
+        await backend.signOut();
+        setLoginError("This account does not have administrator access.");
         return;
       }
-      const adminUser = {
-        name: loginName.trim() || "Store Administrator",
-        email: loginEmail.trim(),
-        isAdmin: true
-      };
-      setCurrentUser(adminUser);
+      setCurrentUser(user);
+      setCustomerName(user.name);
+      setCustomerEmail(user.email);
       setLoginPassword("");
       setIsLoginOpen(false);
-      setActiveTab("admin");
-      showToast("Signed in to Store Admin Portal");
-      return;
+      setActiveTab(user.isAdmin ? "admin" : "shop");
+      const [remoteOrders, remoteWishlist] = await Promise.all([backend.fetchOrders(), backend.fetchWishlist()]);
+      setOrders(remoteOrders.map(order => ({
+        id: order.order_number, date: new Date(order.created_at).toLocaleString("en-IN"),
+        customerName: order.customer_name, email: order.customer_email, address: order.shipping_address,
+        paymentMethod: order.payment_method,
+        items: (order.order_items || []).map(item => ({ id: item.product_id, name: item.product_name, image: item.product_image, price: Number(item.unit_price), quantity: item.quantity })),
+        subtotal: Number(order.subtotal), discount: Number(order.discount), gst: Number(order.tax),
+        total: Number(order.total), couponUsed: order.coupon_code || "None", status: order.status
+      })));
+      setWishlist(remoteWishlist.map(item => item.product_id));
+      showToast(user.isAdmin ? "Signed in to Store Admin Portal" : "Welcome back, " + user.name + "!");
+    } catch (error) {
+      setLoginError(error.message);
     }
-
-    if (!loginName.trim() || !loginPassword.trim()) {
-      setLoginError("Please enter your name and password.");
-      return;
-    }
-
-    const customerUser = {
-      name: loginName.trim(),
-      email:
-        loginEmail.trim() ||
-        `${loginName.trim().toLowerCase().replace(/\s+/g, ".")}@example.com`,
-      isAdmin: false
-    };
-
-    setCurrentUser(customerUser);
-    setCustomerName(customerUser.name);
-    setCustomerEmail(customerUser.email);
-    setLoginPassword("");
-    setIsLoginOpen(false);
-    if (activeTab === "admin") {
-      setActiveTab("shop");
-    }
-    showToast(`Welcome back, ${customerUser.name}!`);
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    try { if (backendEnabled) await backend.signOut(); } catch (error) { showToast(error.message); }
     setCurrentUser(null);
-    if (activeTab === "admin") {
-      setActiveTab("shop");
-    }
+    if (activeTab === "admin") setActiveTab("shop");
     showToast("You have been signed out.");
   }
 
   // --------------------------------------------------------------------------
   // 6. CUSTOMER ORDER CHECKOUT
   // --------------------------------------------------------------------------
-  function handlePlaceOrder(e) {
+  async function handlePlaceOrder(e) {
     e.preventDefault();
-    if (cart.length === 0) {
-      setCheckoutError("Your cart is empty. Please add items first.");
-      return;
-    }
+    if (cart.length === 0) { setCheckoutError("Your cart is empty. Please add items first."); return; }
     if (!customerName.trim() || !customerEmail.trim() || !customerAddress.trim()) {
-      setCheckoutError("Please fill in your full name, email, and delivery address.");
-      return;
+      setCheckoutError("Please fill in your full name, email, and delivery address."); return;
     }
-
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const newOrder = {
-      id: `ORD-${randomNum}`,
-      date: new Date().toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      }),
-      customerName: customerName.trim(),
-      email: customerEmail.trim(),
-      address: customerAddress.trim(),
-      paymentMethod,
-      items: [...cart],
-      subtotal: cartSubtotal,
-      discount: discountAmount,
-      gst: gstAmount,
-      total: finalTotal,
-      couponUsed: appliedCoupon || "None",
-      status: "Confirmed"
-    };
-
-    setProducts((prevProducts) =>
-      prevProducts.map((p) => {
-        const cartItem = cart.find((c) => c.id === p.id);
-        if (!cartItem) return p;
-        return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
-      })
-    );
-
-    setOrders([newOrder, ...orders]);
-    setLatestOrderReceipt(newOrder);
-    setCart([]);
-    setAppliedCoupon(null);
-    setCouponInput("");
-    setCheckoutError("");
-    showToast(`Order #${newOrder.id} confirmed!`);
+    if (backendEnabled && !currentUser) { setCheckoutError("Please sign in before placing an order."); return; }
+    try {
+      let newOrder;
+      if (backendEnabled) {
+        const saved = await backend.createOrder({
+          customerName: customerName.trim(), customerEmail: customerEmail.trim(),
+          address: customerAddress.trim(), paymentMethod, couponCode: appliedCoupon, items: cart
+        });
+        newOrder = {
+          id: saved.order_number, date: new Date(saved.created_at).toLocaleString("en-IN"),
+          customerName: saved.customer_name, email: saved.customer_email, address: saved.shipping_address,
+          paymentMethod, items: [...cart], subtotal: Number(saved.subtotal), discount: Number(saved.discount),
+          gst: Number(saved.tax), total: Number(saved.total), couponUsed: saved.coupon_code || "None", status: saved.status
+        };
+        const remoteProducts = await backend.fetchProducts();
+        setProducts(remoteProducts.map(product => ({
+          ...product, price: Number(product.price), rating: Number(product.rating),
+          reviews: [], specs: Array.isArray(product.specs) ? product.specs : []
+        })));
+      } else {
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        newOrder = {
+          id: "ORD-" + randomNum,
+          date: new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+          customerName: customerName.trim(), email: customerEmail.trim(), address: customerAddress.trim(),
+          paymentMethod, items: [...cart], subtotal: cartSubtotal, discount: discountAmount,
+          gst: gstAmount, total: finalTotal, couponUsed: appliedCoupon || "None", status: "Confirmed"
+        };
+        setProducts(prev => prev.map(p => {
+          const item = cart.find(c => c.id === p.id);
+          return item ? { ...p, stock: Math.max(0, p.stock - item.quantity) } : p;
+        }));
+      }
+      setOrders(prev => [newOrder, ...prev]);
+      setLatestOrderReceipt(newOrder);
+      setCart([]);
+      setAppliedCoupon(null);
+      setCouponInput("");
+      setCheckoutError("");
+      showToast("Order #" + newOrder.id + " confirmed!");
+    } catch (error) {
+      setCheckoutError(error.message || "Unable to place your order. Please try again.");
+    }
   }
 
   // --------------------------------------------------------------------------
