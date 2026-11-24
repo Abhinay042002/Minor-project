@@ -124,7 +124,7 @@ export async function fetchWishlist() {
 }
 
 export async function saveWishlist(productIds) {
-  await request("wishlists?on_conflict=product_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(productIds.map(product_id => ({ product_id }))) });
+  await request("wishlists?on_conflict=user_id,product_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(productIds.map(product_id => ({ product_id }))) });
 }
 
 export async function removeWishlist(productId) {
