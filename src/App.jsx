@@ -279,7 +279,8 @@ export default function App() {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("UPI (Google Pay / PhonePe)");
+  const [paymentMethod] = useState("Cash on Delivery (COD)");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [checkoutError, setCheckoutError] = useState("");
@@ -364,48 +365,44 @@ export default function App() {
   const finalTotal = taxableAmount + gstAmount;
 
   function handleAddToCart(product) {
-    if (product.stock <= 0) {
+    const availableStock = Number(product.stock) || 0;
+    if (availableStock <= 0) {
       showToast("Sorry, this item is currently out of stock.");
       return;
     }
-
-    const existing = cart.find((c) => c.id === product.id);
-    if (existing && existing.quantity >= product.stock) {
-      showToast("Maximum available quantity reached for this item.");
-      return;
-    }
-
-    if (existing) {
-      setCart(
-        cart.map((c) =>
-          c.id === product.id ? { ...c, quantity: c.quantity + 1 } : c
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        {
-          id: product.id,
-          code: product.code,
-          name: product.name,
-          image: product.image,
-          category: product.category,
-          price: product.price,
-          quantity: 1
+    setLatestOrderReceipt(null);
+    setCart((previousCart) => {
+      const existing = previousCart.find((item) => item.id === product.id);
+      if (existing) {
+        if (existing.quantity >= availableStock) {
+          showToast("Maximum available quantity reached for this item.");
+          return previousCart;
         }
-      ]);
-    }
+        return previousCart.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...previousCart, {
+        id: product.id,
+        code: product.code,
+        name: product.name,
+        image: product.image,
+        category: product.category,
+        price: Number(product.price),
+        quantity: 1
+      }];
+    });
     showToast(`${product.name} added to your cart`);
   }
 
   function handleUpdateQuantity(productId, delta) {
-    const product = products.find((p) => p.id === productId);
-    setCart((prevCart) =>
-      prevCart
+    const product = products.find((item) => item.id === productId);
+    setCart((previousCart) =>
+      previousCart
         .map((item) => {
           if (item.id !== productId) return item;
           const nextQty = item.quantity + delta;
-          if (product && nextQty > product.stock) {
+          if (nextQty > (Number(product?.stock) || 0)) {
             showToast("Maximum available quantity reached.");
             return item;
           }
@@ -557,22 +554,33 @@ export default function App() {
   // --------------------------------------------------------------------------
   async function handlePlaceOrder(e) {
     e.preventDefault();
+    if (isPlacingOrder) return;
     if (cart.length === 0) { setCheckoutError("Your cart is empty. Please add items first."); return; }
     if (!customerName.trim() || !customerEmail.trim() || !customerAddress.trim()) {
       setCheckoutError("Please fill in your full name, email, and delivery address."); return;
     }
     if (backendEnabled && !currentUser) { setCheckoutError("Please sign in before placing an order."); return; }
+    const unavailableItem = cart.find((item) => {
+      const product = products.find((entry) => entry.id === item.id);
+      return !product || item.quantity > Number(product.stock || 0);
+    });
+    if (unavailableItem) {
+      setCheckoutError(`${unavailableItem.name} no longer has the requested quantity in stock. Please update your cart.`);
+      return;
+    }
+    setIsPlacingOrder(true);
+    setCheckoutError("");
     try {
       let newOrder;
       if (backendEnabled) {
         const saved = await backend.createOrder({
           customerName: customerName.trim(), customerEmail: customerEmail.trim(),
-          address: customerAddress.trim(), paymentMethod, couponCode: appliedCoupon, items: cart
+          address: customerAddress.trim(), paymentMethod: "Cash on Delivery (COD)", couponCode: appliedCoupon, items: cart
         });
         newOrder = {
           id: saved.order_number, date: new Date(saved.created_at).toLocaleString("en-IN"),
           customerName: saved.customer_name, email: saved.customer_email, address: saved.shipping_address,
-          paymentMethod, items: [...cart], subtotal: Number(saved.subtotal), discount: Number(saved.discount),
+          paymentMethod: "Cash on Delivery (COD)", items: [...cart], subtotal: Number(saved.subtotal), discount: Number(saved.discount),
           gst: Number(saved.tax), total: Number(saved.total), couponUsed: saved.coupon_code || "None", status: saved.status
         };
         const remoteProducts = await backend.fetchProducts();
@@ -586,7 +594,7 @@ export default function App() {
           id: "ORD-" + randomNum,
           date: new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           customerName: customerName.trim(), email: customerEmail.trim(), address: customerAddress.trim(),
-          paymentMethod, items: [...cart], subtotal: cartSubtotal, discount: discountAmount,
+          paymentMethod: "Cash on Delivery (COD)", items: [...cart], subtotal: cartSubtotal, discount: discountAmount,
           gst: gstAmount, total: finalTotal, couponUsed: appliedCoupon || "None", status: "Confirmed"
         };
         setProducts(prev => prev.map(p => {
@@ -603,6 +611,8 @@ export default function App() {
       showToast("Order #" + newOrder.id + " confirmed!");
     } catch (error) {
       setCheckoutError(error.message || "Unable to place your order. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
     }
   }
 
@@ -1874,10 +1884,10 @@ export default function App() {
                   </p>
                   <p>
                     <strong>Payment Mode:</strong>{" "}
-                    {latestOrderReceipt.paymentMethod}
+                    Cash on Delivery (COD)
                   </p>
                   <p className="pt-2 border-t border-slate-100 font-bold text-sm text-slate-900">
-                    Total Paid (Incl. GST): Rs. {latestOrderReceipt.total}
+                    Total to Pay on Delivery (Incl. GST): Rs. {latestOrderReceipt.total}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -1904,9 +1914,12 @@ export default function App() {
             ) : (
               <>
                 {cart.length === 0 ? (
-                  <p className="text-slate-500 text-sm py-8 text-center">
-                    Your shopping cart is empty.
-                  </p>
+                  <div className="py-10 text-center">
+                    <ShoppingCart className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-800 font-semibold">Your cart is empty</p>
+                    <p className="text-slate-500 text-xs mt-1 mb-4">Discover everyday essentials and add something you love.</p>
+                    <button type="button" onClick={() => setIsCartOpen(false)} className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg font-semibold text-xs">Continue Shopping</button>
+                  </div>
                 ) : (
                   <div className="space-y-2.5 mb-4">
                     {cart.map((item) => (
@@ -2077,21 +2090,16 @@ export default function App() {
                     <label className="block font-semibold text-slate-700 mb-1">
                       Payment Method
                     </label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
-                    >
-                      <option value="UPI (Google Pay / PhonePe)">
-                        UPI (Google Pay / PhonePe / Paytm)
-                      </option>
-                      <option value="Cash on Delivery (COD)">
-                        Cash on Delivery (COD)
-                      </option>
-                      <option value="Credit / Debit Card">
-                        Credit / Debit Card
-                      </option>
-                    </select>
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-5 h-5 text-emerald-700" />
+                        <div>
+                          <p className="font-bold text-emerald-900">Cash on Delivery (COD)</p>
+                          <p className="text-[11px] text-emerald-800">Pay when your order arrives at your doorstep.</p>
+                        </div>
+                      </div>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
+                    </div>
                   </div>
 
                   {checkoutError && (
@@ -2102,9 +2110,10 @@ export default function App() {
 
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition"
+                    disabled={isPlacingOrder || cart.length === 0}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg text-sm transition"
                   >
-                    Complete Order (Rs. {finalTotal})
+                    {isPlacingOrder ? "Placing Order..." : `Place COD Order (Rs. ${finalTotal})`}
                   </button>
                 </form>
               </>
